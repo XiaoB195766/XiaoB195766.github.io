@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>AI Agent 系统终极演示 v3</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { margin:0; font-family: Arial; background:#0f172a; color:#e2e8f0; }
+.header { background:#020617; padding:15px 20px; font-size:18px; display:flex; justify-content:space-between; }
+.header span { color:#22c55e; font-weight:bold; }
+.login { display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
+.login input { margin:5px; padding:10px; border-radius:8px; border:none; width:200px; }
+.login button { margin-top:10px; padding:10px; border-radius:8px; border:none; background:#22c55e; color:black; cursor:pointer; width:220px; }
+.dashboard { display:none; padding:20px; }
+.container { display:grid; grid-template-columns:2fr 1fr; gap:20px; }
+.card { background:#1e293b; padding:20px; border-radius:12px; }
+.metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; }
+.metric { background:#020617; padding:15px; border-radius:10px; }
+.metric-title { font-size:12px; color:#94a3b8; }
+.metric-value { font-size:22px; margin-top:8px; }
+.green { color:#22c55e; }
+.log { height:150px; overflow:auto; background:#020617; padding:10px; border-radius:10px; font-size:12px; margin-top:10px; }
+.messages { height:180px; overflow:auto; background:#020617; padding:10px; border-radius:10px; font-size:12px; }
+.input { margin-top:10px; display:flex; }
+.input input { flex:1; padding:10px; border-radius:8px; border:none; }
+.input button { margin-left:10px; padding:10px; border-radius:8px; border:none; background:#22c55e; color:black; cursor:pointer; }
+.agent-panel { display:flex; justify-content:space-between; margin-top:10px; }
+.agent-card { background:#020617; padding:10px; border-radius:8px; width:30%; text-align:center; }
+.user-list { margin-top:10px; }
+.user-list table { width:100%; border-collapse:collapse; }
+.user-list th, .user-list td { padding:5px; border-bottom:1px solid #334155; }
+canvas { background:#020617; border-radius:10px; padding:10px; margin-top:10px; }
+.progress-container { background:#334155; border-radius:8px; height:15px; width:100%; margin-top:5px; }
+.progress-bar { height:15px; background:#22c55e; border-radius:8px; width:0%; transition:0.3s; }
+.agent-buttons { margin-top:5px; display:flex; justify-content:space-between; }
+.agent-buttons button { padding:5px; font-size:12px; border-radius:5px; border:none; background:#22c55e; color:black; cursor:pointer; flex:1; margin:2px; }
+.virtual-actions { margin-top:20px; display:flex; justify-content:space-around; }
+.virtual-actions button { padding:10px; border-radius:8px; border:none; background:#facc15; color:black; cursor:pointer; flex:1; margin:5px; font-weight:bold; }
+</style>
+</head>
+
+<body>
+
+<div class="login" id="login">
+  <h2>AI Agent 系统登录</h2>
+  <input id="user" placeholder="用户名">
+  <input id="pass" type="password" placeholder="密码">
+  <button onclick="login()">登录</button>
+</div>
+
+<div class="dashboard" id="dashboard">
+
+  <div class="header">
+    🤖 AI Agent 系统终极演示 v3
+    <span>运行中 ●</span>
+  </div>
+
+  <div class="container">
+
+    <!-- 左侧仪表盘 -->
+    <div class="card">
+      <h3>系统指标</h3>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-title">今日 Token</div>
+          <div class="metric-value" id="today">5,124,233</div>
+        </div>
+        <div class="metric">
+          <div class="metric-title">30天总量</div>
+          <div class="metric-value">150,000,000</div>
+        </div>
+        <div class="metric">
+          <div class="metric-title">任务成功率</div>
+          <div class="metric-value green">98.2%</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:20px;">Agent 状态与任务</h3>
+      <div class="agent-panel">
+        <div class="agent-card">
+          信息收集<br>
+          <div class="progress-container"><div id="progress1" class="progress-bar"></div></div>
+          <div class="agent-buttons">
+            <button onclick="startTask(1)">开始</button>
+            <button onclick="stopTask(1)">停止</button>
+            <button onclick="resetTask(1)">重置</button>
+          </div>
+        </div>
+        <div class="agent-card">
+          分析 Agent<br>
+          <div class="progress-container"><div id="progress2" class="progress-bar"></div></div>
+          <div class="agent-buttons">
+            <button onclick="startTask(2)">开始</button>
+            <button onclick="stopTask(2)">停止</button>
+            <button onclick="resetTask(2)">重置</button>
+          </div>
+        </div>
+        <div class="agent-card">
+          反馈 Agent<br>
+          <div class="progress-container"><div id="progress3" class="progress-bar"></div></div>
+          <div class="agent-buttons">
+            <button onclick="startTask(3)">开始</button>
+            <button onclick="stopTask(3)">停止</button>
+            <button onclick="resetTask(3)">重置</button>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:20px;">虚拟操作</h3>
+      <div class="virtual-actions">
+        <button onclick="submitHomework()">提交作业</button>
+        <button onclick="generateReport()">生成报告</button>
+      </div>
+
+      <h3 style="margin-top:20px;">系统日志</h3>
+      <div class="log" id="log">
+        [INFO] 系统启动...<br>
+        [INFO] Agent 初始化完成<br>
+      </div>
+
+      <h3 style="margin-top:20px;">用户列表</h3>
+      <div class="user-list">
+        <table>
+          <tr><th>用户名</th><th>状态</th></tr>
+          <tr><td>学生A</td><td>活跃</td></tr>
+          <tr><td>学生B</td><td>活跃</td></tr>
+          <tr><td>学生C</td><td>离线</td></tr>
+        </table>
+      </div>
+
+      <h3 style="margin-top:20px;">统计图表</h3>
+      <canvas id="barChart"></canvas>
+      <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- 右侧聊天窗口 -->
+    <div class="card">
+      <h3>Agent 对话测试</h3>
+      <div class="messages" id="messages">
+        <div>🤖：你好，我可以帮助你学习和解题</div>
+      </div>
+      <div class="input">
+        <input id="input" placeholder="输入问题...">
+        <button onclick="send()">发送</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function login(){ document.getElementById('login').style.display='none'; document.getElementById('dashboard').style.display='block'; }
+setInterval(()=>{ const log=document.getElementById("log"); log.innerHTML+="[INFO] 任务执行成功 ✔<br>"; log.scrollTop=log.scrollHeight; },2000);
+setInterval(()=>{ let el=document.getElementById("today"); let val=parseInt(el.innerText.replace(/,/g,'')); val+=Math.floor(Math.random()*5000); el.innerText=val.toLocaleString(); },3000);
+function send(){ const input=document.getElementById("input"); const msg=input.value; if(!msg) return; const box=document.getElementById("messages"); box.innerHTML+=`<div>👤：${msg}</div>`; input.value=""; setTimeout(()=>{ box.innerHTML+=`<div>🤖：正在分析问题...已生成解题思路 ✔</div>`; box.scrollTop=box.scrollHeight; },1000);}
+const barCtx = document.getElementById('barChart').getContext('2d');
+const barChart = new Chart(barCtx,{type:'bar',data:{labels:['周一','周二','周三','周四','周五','周六','周日'],datasets:[{label:'每日 Token 使用量',data:[5100000,5200000,5000000,5300000,5400000,5000000,5150000],backgroundColor:'#22c55e'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+const pieCtx=document.getElementById('pieChart').getContext('2d');
+const pieChart=new Chart(pieCtx,{type:'doughnut',data:{labels:['信息收集','分析','反馈'],datasets:[{data:[33,33,34],backgroundColor:['#22c55e','#14b8a6','#facc15']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+let tasks = [null,null,null];
+function startTask(i){ if(tasks[i-1]) return; let progress=document.getElementById("progress"+i); tasks[i-1]=setInterval(()=>{ let w=parseInt(progress.style.width||0); w+=Math.random()*3; if(w>100){w=100; clearInterval(tasks[i-1]); tasks[i-1]=null;} progress.style.width=w+"%"; },200); logMsg(`[INFO] Agent ${i} 任务开始...`);}
+function stopTask(i){ if(tasks[i-1]) clearInterval(tasks[i-1]),tasks[i-1]=null; logMsg(`[INFO] Agent ${i} 任务已停止`);}
+function resetTask(i){ let progress=document.getElementById("progress"+i); progress.style.width="0%"; if(tasks[i-1]) clearInterval(tasks[i-1]),tasks[i-1]=null; logMsg(`[INFO] Agent ${i} 任务已重置`);}
+function logMsg(msg){ const log=document.getElementById("log"); log.innerHTML+=msg+"<br>"; log.scrollTop=log.scrollHeight; }
+// 虚拟操作按钮
+function submitHomework(){ logMsg("[INFO] 用户提交作业..."); setTimeout(()=>{ logMsg("[INFO] 作业处理完成 ✔"); alert("作业提交成功！"); },1000);}
+function generateReport(){ logMsg("[INFO] 开始生成报告..."); setTimeout(()=>{ logMsg("[INFO] 报告生成完成 ✔"); alert("报告生成成功！"); },1500);}
+</script>
+
+</body>
+</html>
